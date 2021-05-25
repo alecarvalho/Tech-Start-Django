@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  db_seller:
+    image: postgres
+    environment:
+      - POSTGRES_DB=seller
+      - POSTGRES_USER=olist
+      - POSTGRES_PASSWORD=olist123
+    ports: 
+    - "5432:5432"
+    networks: 
+      - ts_seller
+    container_name: db_seller
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U olist -d seller"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+  src:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    volumes:
+    - ./:/var/www
+    ports:
+      - '8000:8000'
+    depends_on:
+      db_seller:
+          condition: service_healthy
+    networks:
+        - ts_seller
+    restart: always
+networks:
+  ts_seller:
+    name: ts_seller
+    driver: bridge
